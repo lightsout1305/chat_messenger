@@ -5,3 +5,5 @@ db.sqlite3
 mypy.ini
 chat/.mypy_cache
 .env
+__pycache__
+chat/__pycache__
