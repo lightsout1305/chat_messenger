@@ -1,0 +1,7 @@
+db.sqlite3
+.idea
+.venv
+.mypy_cache
+mypy.ini
+chat/.mypy_cache
+.env
