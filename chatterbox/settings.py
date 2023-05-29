@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 from environ import environ
 
+import chat.apps
+
 env = environ.Env()
 
 
@@ -43,6 +45,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third party apps
+    'rest_framework',
+    # Local apps
+    'chat.apps.ChatConfig',
 ]
 
 MIDDLEWARE = [
