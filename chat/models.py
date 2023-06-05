@@ -46,3 +46,13 @@ class Messages(models.Model):
         Отображения текста сообщения
         """
         return str(self.message)
+
+
+class UserImage(models.Model):
+    """
+    Таблица с аватарами пользователей
+    """
+    user: typing.Type[models.ForeignKey] = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='user_photo'
+    )
+    image: typing.Type[models.ImageField] = models.ImageField()

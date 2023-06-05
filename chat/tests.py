@@ -5,7 +5,7 @@ import typing
 from django.test import TestCase
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from .models import Messages, GroupChat
+from .models import Messages, GroupChat, UserImage
 
 
 class TestGroupChatDatabase(TestCase):
@@ -110,3 +110,66 @@ class TestMessagesDatabase(TestCase):
         self.assertIsInstance(self.message.modified, timezone.datetime)
         self.assertIsInstance(self.message.author, self.user)
         self.assertIsInstance(self.message.group_chat, GroupChat)
+
+
+class TestUserImage(TestCase):
+    """
+    Тестирование UserImage
+    """
+    user: typing.Type[get_user_model]
+    image: str
+    author: typing.Type[get_user_model]
+    user_image: typing.Type[UserImage]
+
+    def test_image_is_created(self) -> None:
+        """
+        Тестирование, что запись в UserImage создана
+        """
+        self.user = get_user_model()
+        self.user = self.user.objects.create_user(
+            username='test_user',
+            password='test123!',
+            email='test1@example.com'
+        )
+        self.image = 'test.png'
+        self.user_image = UserImage.objects.create(
+            user=self.user,
+            image=self.image
+        )
+        self.assertTrue(self.user_image)
+
+    def test_user_image_data_is_correct(self) -> None:
+        """
+        Тестирование, что у записи в UserImage сохранились все данные
+        """
+        self.user = get_user_model()
+        self.author = self.user.objects.create_user(
+            username='test_user',
+            password='test123!',
+            email='test1@example.com'
+        )
+        self.image = 'test.png'
+        self.user_image = UserImage.objects.create(
+            user=self.author,
+            image=self.image
+        )
+        self.assertEqual(self.user_image.user, self.author)
+        self.assertEqual(self.user_image.image, self.image)
+
+    def test_user_image_data_type_is_correct(self) -> None:
+        """
+        Тестирование, что типы данных в UserImage правильные
+        """
+        self.user = get_user_model()
+        self.author = self.user.objects.create_user(
+            username='test_user',
+            password='test123!',
+            email='test1@example.com'
+        )
+        self.image = 'test.png'
+        self.user_image = UserImage.objects.create(
+            user=self.author,
+            image=self.image
+        )
+        self.assertIsInstance(self.user_image, UserImage)
+        self.assertIsInstance(self.user_image.user, self.user)
