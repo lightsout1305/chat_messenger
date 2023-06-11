@@ -1,58 +1,128 @@
-from rest_framework import status, generics
+"""
+Модуль с API и представлениями проекта
+"""
+from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.contrib.auth import get_user_model
-from rest_framework.response import Response
-from .models import Messages, GroupChat
-from .serializers import MessageSerializer, UserSerializer, GroupChatSerializer
+from .models import GroupMessages, GroupChat, UserImage, Messages
+from .serializers import GroupMessageSerializer, UserSerializer, GroupChatSerializer, \
+    UserImageSerializer, MessageSerializer
 
 
-class MessagesView(generics.ListCreateAPIView):
+class GetMessages(generics.ListAPIView):
+    """
+    API получения списка сообщений пользователя
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = MessageSerializer
-    queryset = Messages.objects.all()
 
     def get_queryset(self):
+        """
+        Получить список сообщений с фильтрацией по id автора и id получателя
+        """
         queryset = Messages.objects.all()
-        group_chat = self.request.query_params.get('group-chat')
-        if group_chat is not None:
-            queryset = queryset.filter(group_chat=group_chat)
+        recipient = self.request.query_params.get('recipient')
+        author = self.request.query_params.get('author')
+        if recipient is not None and author is None:
+            queryset = queryset.filter(recipient__username=recipient)
+        elif author is not None and recipient is None:
+            queryset = queryset.filter(author__username=author)
+        elif author is not None and recipient is not None:
+            queryset = queryset.filter(author__username=author,
+                                       recipient__username=recipient)
         return queryset
 
-    def post(self, request, *args, **kwargs):
-        serial = MessageSerializer(data=request.data)
-        if serial.is_valid():
-            message = Messages.objects.create(
-                message=request.data['message'],
-                author_id=request.user.id,
-                group_chat_id=request.data['group_chat']
-            )
-            message.save()
-            return Response(serial.data, status=status.HTTP_200_OK)
-        else:
-            return Response(serial.data, status=status.HTTP_400_BAD_REQUEST)
+
+class CreateMessage(generics.CreateAPIView):
+    """
+    API создания сообщения
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = MessageSerializer
 
 
-class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+class GetGroupMessages(generics.ListAPIView):
+    """
+    API получения сообщений группы с фильтрацией по id группового чата
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = GroupMessageSerializer
+
+    def get_queryset(self):
+        queryset = GroupMessages.objects.all()
+        group_chat = self.request.query_params.get('group-chat')
+        if group_chat is not None:
+            queryset = queryset.filter(group_chat__slug=group_chat)
+        return queryset
+
+
+class CreateGroupMessage(generics.CreateAPIView):
+    serializer_class = GroupMessageSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class GetUsers(generics.ListAPIView):
     queryset = get_user_model().objects.all()
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
-    def put(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.username = request.data.get('username')
-        instance.first_name = request.data.get('first_name')
-        instance.last_name = request.data.get('last_name')
-        instance.save()
 
-        serial = UserSerializer(data=request.data)
-        if serial.is_valid(raise_exception=True):
-            self.perform_update(serializer=serial)
-            return Response(serial.data, status=status.HTTP_200_OK)
-        else:
-            return Response(serial.errors, status=status.HTTP_400_BAD_REQUEST)
+class GetUserInfo(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = UserSerializer
+    queryset = get_user_model().objects.all()
 
 
-class GroupChatView(generics.ListCreateAPIView):
+class UpdateUserInfo(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = UserSerializer
+    queryset = get_user_model().objects.all()
+
+
+class GetGroupChat(generics.ListAPIView):
     queryset = GroupChat.objects.all()
     serializer_class = GroupChatSerializer
     permission_classes = [IsAuthenticated]
+
+
+class GetGroupChatInfo(generics.RetrieveAPIView):
+    queryset = GroupChat.objects.all()
+    serializer_class = GroupChatSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class CreateGroupChat(generics.CreateAPIView):
+    serializer_class = GroupChatSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class UpdateGroupChat(generics.UpdateAPIView):
+    serializer_class = GroupChatSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = GroupChat.objects.all()
+
+
+class DeleteGroupChat(generics.DestroyAPIView):
+    serializer_class = GroupChatSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = GroupChat.objects.all()
+
+
+class CreateUserImage(generics.CreateAPIView):
+    serializer_class = UserImageSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    lookup_field = 'user_id'
+
+
+class GetUserImage(generics.RetrieveAPIView):
+    serializer_class = UserImageSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = UserImage.objects.all()
+    lookup_field = 'user_id'
+
+
+class UpdateUserImage(generics.UpdateAPIView):
+    serializer_class = UserImageSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = UserImage.objects.all()
+    lookup_field = 'user_id'

@@ -6,3 +6,4 @@ mypy.ini
 chat/.mypy_cache
 .env
 media/
+fixtures/

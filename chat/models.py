@@ -13,12 +13,42 @@ class GroupChat(models.Model):
     title: typing.Type[models.CharField] = models.CharField(
         max_length=255
     )
+    slug: typing.Type[models.SlugField] = models.SlugField(
+        max_length=100
+    )
 
     def __str__(self) -> str:
         """
         Отображения названия группового чата
         """
         return str(self.title)
+
+
+class GroupMessages(models.Model):
+    """
+    Таблица с историей групповых сообщений
+    """
+    message: typing.Type[models.CharField] = models.CharField(
+        max_length=255
+    )
+    author: typing.Type[models.ForeignKey] = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='group_message_author'
+    )
+    created: typing.Type[models.DateTimeField] = models.DateTimeField(
+        auto_now_add=True
+    )
+    modified: typing.Type[models.DateTimeField] = models.DateTimeField(
+        auto_now=True
+    )
+    group_chat: typing.Type[models.ForeignKey] = models.ForeignKey(
+        GroupChat, on_delete=models.CASCADE
+    )
+
+    def __str__(self) -> str:
+        """
+        Отображения текста сообщения
+        """
+        return str(self.message)
 
 
 class Messages(models.Model):
@@ -37,8 +67,8 @@ class Messages(models.Model):
     modified: typing.Type[models.DateTimeField] = models.DateTimeField(
         auto_now=True
     )
-    group_chat: typing.Type[models.ForeignKey] = models.ForeignKey(
-        GroupChat, on_delete=models.CASCADE
+    recipient: typing.Type[models.ForeignKey] = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='message_recipient'
     )
 
     def __str__(self) -> str:

@@ -5,7 +5,7 @@ import typing
 from rest_framework.serializers import ModelSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import Model
-from .models import Messages, UserImage, GroupChat
+from .models import GroupMessages, UserImage, GroupChat, Messages
 
 
 class MessageSerializer(ModelSerializer):
@@ -21,6 +21,19 @@ class MessageSerializer(ModelSerializer):
         fields: typing.ClassVar[tuple] = "__all__"
 
 
+class GroupMessageSerializer(ModelSerializer):
+    """
+    Сериализация модели GroupMessages
+    """
+
+    class Meta:
+        """
+        Настройка классовых переменных GroupMessageSerializer
+        """
+        model: typing.ClassVar[Model] = GroupMessages
+        fields: typing.ClassVar[tuple] = "__all__"
+
+
 class UserSerializer(ModelSerializer):
     """
     Сериализация модели User
@@ -32,7 +45,6 @@ class UserSerializer(ModelSerializer):
         model: typing.ClassVar[Model] = get_user_model()
         fields: typing.ClassVar[tuple] = (
             'id',
-            'username',
             'first_name',
             'last_name'
         )
@@ -61,5 +73,6 @@ class GroupChatSerializer(ModelSerializer):
         model: typing.ClassVar[Model] = GroupChat
         fields: typing.ClassVar[tuple] = (
             'id',
-            'title'
+            'title',
+            'slug'
         )
