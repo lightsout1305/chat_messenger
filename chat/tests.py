@@ -249,7 +249,9 @@ class TestGetMessagesAPI(TestCase):
     """
     Тестирование метода GetMessages
     """
-    credentials: tuple = ('lightsout', '0077dimaplot')
+    env = environ.Env()
+    env.read_env()
+    credentials: tuple = (env.str("LOGIN"), env.str("PASSWORD"))
     unauthorized_api: Response = requests.get("http://127.0.0.1:8000/api/messages")
     authorized_api: Response = requests.get("http://127.0.0.1:8000/api/messages", auth=credentials)
     api_with_author: Response = requests.get("http://127.0.0.1:8000/api/messages?author=lightsout",
@@ -312,6 +314,23 @@ class TestGetMessagesAPI(TestCase):
         one_person_absent: Response = self.api_with_at_least_one_nonexistent_person.json()
         self.assertFalse(one_person_absent)
 
+    def test_return_message_with_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает все обязательные поля
+        """
+        message_id: int = self.authorized_api.json()[0]['id']
+        message: str = self.authorized_api.json()[0]['message']
+        author: id = self.authorized_api.json()[0]['author']
+        recipient: id = self.authorized_api.json()[0]['recipient']
+        created: str = self.authorized_api.json()[0]['created']
+        modified: str = self.authorized_api.json()[0]['modified']
+        self.assertTrue(message_id)
+        self.assertTrue(message)
+        self.assertTrue(author)
+        self.assertTrue(recipient)
+        self.assertTrue(created)
+        self.assertTrue(modified)
+
 
 class TestCreateMessageAPI(TestCase):
     """
@@ -358,3 +377,75 @@ class TestCreateMessageAPI(TestCase):
         Тестирование, что метод возвращает 400
         """
         self.assertEqual(self.unsuccessful_api.status_code, 400)
+
+
+class TestGetGroupMessagesAPI(TestCase):
+    """
+    Тестирование API GetGroupMessages
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: tuple = (env.str("LOGIN"), env.str("PASSWORD"))
+    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupmessages')
+    authorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupmessages', auth=credentials)
+    api_with_group_chat: Response = requests.get('http://127.0.0.1:8000/api/groupmessages?group-chat=french-group',
+                                                 auth=credentials)
+    api_with_nonexistent_group_chat: Response = requests.get('http://127.0.0.1:8000/api/groupmessages?group-chat=lel',
+                                                             auth=credentials)
+
+    def test_group_messages_return_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_group_messages_have_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает все обязательные поля
+        """
+        message_id: int = self.authorized_api.json()[0]['id']
+        message: str = self.authorized_api.json()[0]['message']
+        author: id = self.authorized_api.json()[0]['author']
+        group_chat: id = self.authorized_api.json()[0]['group_chat']
+        created: str = self.authorized_api.json()[0]['created']
+        modified: str = self.authorized_api.json()[0]['modified']
+        self.assertTrue(message_id)
+        self.assertTrue(message)
+        self.assertTrue(author)
+        self.assertTrue(group_chat)
+        self.assertTrue(created)
+        self.assertTrue(modified)
+
+    def test_group_messages_return_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+    def test_group_messages_with_group_chat_returns_200_and_body(self) -> None:
+        """
+        Тестирование, что метод с фильтрацией по групповому чату возвращает непустое тело
+        ответа со всеми обязательными полями
+        """
+        message_id: int = self.api_with_group_chat.json()[0]['id']
+        message: str = self.api_with_group_chat.json()[0]['message']
+        author: id = self.api_with_group_chat.json()[0]['author']
+        group_chat: id = self.api_with_group_chat.json()[0]['group_chat']
+        created: str = self.api_with_group_chat.json()[0]['created']
+        modified: str = self.api_with_group_chat.json()[0]['modified']
+        self.assertTrue(message_id)
+        self.assertTrue(message)
+        self.assertTrue(author)
+        self.assertTrue(group_chat)
+        self.assertTrue(created)
+        self.assertTrue(modified)
+
+    def test_group_messages_with_nonexistent_group_chat_returns_200(self) -> None:
+        """
+        Тестирование, что метод с фильтрацией по несуществующему групповому чату
+        возвращает 200 с пустым телом ответа
+        """
+        self.assertEqual(self.api_with_nonexistent_group_chat.status_code, 200)
+        self.assertFalse(self.api_with_nonexistent_group_chat.json())
+
+
