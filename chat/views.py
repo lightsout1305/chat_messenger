@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from .models import GroupMessages, GroupChat, UserImage, Messages
 from .serializers import GroupMessageSerializer, UserSerializer, GroupChatSerializer, \
     UserImageSerializer, MessageSerializer
+from .permissions import IsProfileOwner
 
 
 class GetMessages(generics.ListAPIView):
@@ -68,13 +69,13 @@ class GetUsers(generics.ListAPIView):
 
 
 class GetUserInfo(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
 
 
 class UpdateUserInfo(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsProfileOwner]
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
 

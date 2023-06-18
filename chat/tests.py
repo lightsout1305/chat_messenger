@@ -182,9 +182,9 @@ class TestMessageDatabase(TestCase):
         self.assertIsInstance(self.message.recipient, self.user)
 
 
-class TestUserImage(TestCase):
+class TestUserImageDatabase(TestCase):
     """
-    Тестирование UserImage
+    Тестирование таблицы UserImage
     """
     user: typing.Type[get_user_model]
     image: str
@@ -251,21 +251,35 @@ class TestGetMessagesAPI(TestCase):
     """
     env = environ.Env()
     env.read_env()
-    credentials: tuple = (env.str("LOGIN"), env.str("PASSWORD"))
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
     unauthorized_api: Response = requests.get("http://127.0.0.1:8000/api/messages")
-    authorized_api: Response = requests.get("http://127.0.0.1:8000/api/messages", auth=credentials)
-    api_with_author: Response = requests.get("http://127.0.0.1:8000/api/messages?author=lightsout",
-                                             auth=credentials)
-    api_with_nonexistent_author: Response = requests.get("http://127.0.0.1:8000/api/messages?author=zorro",
-                                                         auth=credentials)
-    api_with_recipient: Response = requests.get("http://127.0.0.1:8000/api/messages?recipient=raymond",
-                                                auth=credentials)
-    api_with_nonexistent_recipient: Response = requests.get("http://127.0.0.1:8000/api/messages?recipient=lol",
-                                                            auth=credentials)
-    api_with_both_author_and_recipient: Response = requests.get("http://127.0.0.1:8000/api/messages?author=lightsout"
-                                                                "&recipient=raymond", auth=credentials)
-    api_with_at_least_one_nonexistent_person: Response = requests.get("http://127.0.0.1:8000/api/messages?author"
-                                                                      "=lightsout&recipient=kek", auth=credentials)
+    authorized_api: Response = requests.get("http://127.0.0.1:8000/api/messages",
+                                            auth=credentials)
+    api_with_author: Response = \
+        requests.get("http://127.0.0.1:8000/api/messages?author=lightsout",
+                     auth=credentials)
+    api_with_nonexistent_author: Response = \
+        requests.get("http://127.0.0.1:8000/api/messages?author=zorro",
+                     auth=credentials)
+    api_with_recipient: Response = \
+        requests.get("http://127.0.0.1:8000/api/messages?recipient=raymond",
+                     auth=credentials)
+    api_with_nonexistent_recipient: Response = \
+        requests.get("http://127.0.0.1:8000/api/messages?recipient=lol",
+                     auth=credentials)
+    api_with_both_author_and_recipient: Response = \
+        requests.get("http://127.0.0.1:8000/api/messages?author=lightsout"
+                     "&recipient=raymond", auth=credentials)
+    api_with_at_least_one_nonexistent_person: Response = \
+        requests.get("http://127.0.0.1:8000/api/messages?author"
+                     "=lightsout&recipient=kek", auth=credentials)
+    message_id: int = 1
+    message: str = "Salut!"
+    author: typing.Callable = env.int("USER_ID")
+    recipient: typing.Callable = env.int("RECIPIENT_ID")
+    created: str = '2023-06-11T20:33:03.462882Z'
+    modified: str = '2023-06-11T20:33:03.462882Z'
+    count_model: int = Messages.objects.count()
 
     def test_messages_return_200_if_authorized(self) -> None:
         """
@@ -288,7 +302,8 @@ class TestGetMessagesAPI(TestCase):
 
     def test_return_messages_with_nonexistent_author(self) -> None:
         """
-        Тестирование, что метод возвращает пустое тело ответа, если несуществующий автор
+        Тестирование, что метод возвращает пустое тело ответа,
+        если несуществующий автор
         """
         author: Response = self.api_with_nonexistent_author.json()
         self.assertFalse(author)
@@ -302,34 +317,42 @@ class TestGetMessagesAPI(TestCase):
 
     def test_return_messages_with_nonexistent_recipient(self) -> None:
         """
-        Тестирование, что метод возвращает пустое тело ответа, если несуществующий адресат
+        Тестирование, что метод возвращает пустое тело ответа,
+        если несуществующий адресат
         """
         recipient: Response = self.api_with_nonexistent_recipient.json()
         self.assertFalse(recipient)
 
     def test_return_message_with_one_nonexistent_person(self) -> None:
         """
-        Тестирование, что метод возвращает пустое тело ответа, если хотя бы одного человека не существует
+        Тестирование, что метод возвращает пустое тело ответа,
+        если хотя бы одного человека не существует
         """
-        one_person_absent: Response = self.api_with_at_least_one_nonexistent_person.json()
+        one_person_absent: Response = \
+            self.api_with_at_least_one_nonexistent_person.json()
         self.assertFalse(one_person_absent)
 
     def test_return_message_with_required_fields(self) -> None:
         """
         Тестирование, что метод возвращает все обязательные поля
         """
-        message_id: int = self.authorized_api.json()[0]['id']
-        message: str = self.authorized_api.json()[0]['message']
-        author: id = self.authorized_api.json()[0]['author']
-        recipient: id = self.authorized_api.json()[0]['recipient']
-        created: str = self.authorized_api.json()[0]['created']
-        modified: str = self.authorized_api.json()[0]['modified']
-        self.assertTrue(message_id)
-        self.assertTrue(message)
-        self.assertTrue(author)
-        self.assertTrue(recipient)
-        self.assertTrue(created)
-        self.assertTrue(modified)
+        content: dict = self.authorized_api.json()
+        self.assertTrue(content[0]["id"], self.message_id)
+        self.assertTrue(content[0]["message"], self.message)
+        self.assertTrue(content[0]["author"], self.author)
+        self.assertTrue(content[0]["recipient"], self.recipient)
+        self.assertTrue(content[0]["created"], self.created)
+        self.assertTrue(content[0]["modified"], self.modified)
+
+    def test_get_messages_have_all_records(self) -> None:
+        """
+        Тестирование, что метод возвращает все сообщения
+        """
+        count: int = 0
+
+        for _ in self.authorized_api.json():
+            count += 1
+        self.assertEqual(self.count_model, count)
 
 
 class TestCreateMessageAPI(TestCase):
@@ -338,7 +361,7 @@ class TestCreateMessageAPI(TestCase):
     """
     env = environ.Env()
     env.read_env()
-    credentials: tuple = (env.str("LOGIN"), env.str("PASSWORD"))
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
     message: str = "Hello from tests"
     author: int = 5
     recipient: int = 1
@@ -351,16 +374,18 @@ class TestCreateMessageAPI(TestCase):
         "message": message,
     }
     unauthorized_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/")
-    authorized_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/", auth=credentials,
+    authorized_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/",
+                                             auth=credentials,
                                              data=data)
-    unsuccessful_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/", auth=credentials,
+    unsuccessful_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/",
+                                               auth=credentials,
                                                data=bad_data)
 
     def test_create_message_returns_200(self) -> None:
         """
         Тестирование, что метод возвращает 200 и сообщение успешно создается
         """
-        content = self.authorized_api.json()
+        content: dict = self.authorized_api.json()
         self.assertEqual(self.authorized_api.status_code, 201)
         self.assertEqual(content["message"], self.message)
         self.assertEqual(content["author"], self.author)
@@ -383,15 +408,25 @@ class TestGetGroupMessagesAPI(TestCase):
     """
     Тестирование API GetGroupMessages
     """
-    env = environ.Env()
+    env: environ.Env = environ.Env()
     env.read_env()
-    credentials: tuple = (env.str("LOGIN"), env.str("PASSWORD"))
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
     unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupmessages')
-    authorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupmessages', auth=credentials)
-    api_with_group_chat: Response = requests.get('http://127.0.0.1:8000/api/groupmessages?group-chat=french-group',
-                                                 auth=credentials)
-    api_with_nonexistent_group_chat: Response = requests.get('http://127.0.0.1:8000/api/groupmessages?group-chat=lel',
-                                                             auth=credentials)
+    authorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupmessages',
+                                            auth=credentials)
+    api_with_group_chat: Response = \
+        requests.get('http://127.0.0.1:8000/api/groupmessages?group-chat=french-group',
+                     auth=credentials)
+    api_with_nonexistent_group_chat: Response = \
+        requests.get('http://127.0.0.1:8000/api/groupmessages?group-chat=lel',
+                     auth=credentials)
+    message_id: int = 1
+    message: str = "Test"
+    author: typing.Callable = env.int("USER_ID")
+    group_chat: int = 1
+    created: str = '2023-06-11T20:31:39.163859Z'
+    modified: str = '2023-06-11T20:31:39.163859Z'
+    count_model: int = GroupMessages.objects.count()
 
     def test_group_messages_return_200(self) -> None:
         """
@@ -403,18 +438,23 @@ class TestGetGroupMessagesAPI(TestCase):
         """
         Тестирование, что метод возвращает все обязательные поля
         """
-        message_id: int = self.authorized_api.json()[0]['id']
-        message: str = self.authorized_api.json()[0]['message']
-        author: id = self.authorized_api.json()[0]['author']
-        group_chat: id = self.authorized_api.json()[0]['group_chat']
-        created: str = self.authorized_api.json()[0]['created']
-        modified: str = self.authorized_api.json()[0]['modified']
-        self.assertTrue(message_id)
-        self.assertTrue(message)
-        self.assertTrue(author)
-        self.assertTrue(group_chat)
-        self.assertTrue(created)
-        self.assertTrue(modified)
+        self.assertTrue(self.message_id)
+        self.assertTrue(self.message)
+        self.assertTrue(self.author)
+        self.assertTrue(self.group_chat)
+        self.assertTrue(self.created)
+        self.assertTrue(self.modified)
+
+    def test_group_messages_have_required_data_type(self) -> None:
+        """
+        Тестирование, что у полей метода запланированные типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content[0]["message"], str)
+        self.assertIsInstance(content[0]["author"], int)
+        self.assertIsInstance(content[0]["group_chat"], int)
+        self.assertIsInstance(content[0]["created"], str)
+        self.assertIsInstance(content[0]["modified"], str)
 
     def test_group_messages_return_403(self) -> None:
         """
@@ -429,8 +469,8 @@ class TestGetGroupMessagesAPI(TestCase):
         """
         message_id: int = self.api_with_group_chat.json()[0]['id']
         message: str = self.api_with_group_chat.json()[0]['message']
-        author: id = self.api_with_group_chat.json()[0]['author']
-        group_chat: id = self.api_with_group_chat.json()[0]['group_chat']
+        author: int = self.api_with_group_chat.json()[0]['author']
+        group_chat: int = self.api_with_group_chat.json()[0]['group_chat']
         created: str = self.api_with_group_chat.json()[0]['created']
         modified: str = self.api_with_group_chat.json()[0]['modified']
         self.assertTrue(message_id)
@@ -448,4 +488,245 @@ class TestGetGroupMessagesAPI(TestCase):
         self.assertEqual(self.api_with_nonexistent_group_chat.status_code, 200)
         self.assertFalse(self.api_with_nonexistent_group_chat.json())
 
+    def test_group_messages_return_all_records(self) -> None:
+        """
+        Тестирование, что метод возвращает все групповые сообщения
+        """
+        count: int = 0
 
+        for _ in self.authorized_api.json():
+            count += 1
+        self.assertEqual(self.count_model, count)
+
+
+class TestCreateGroupMessagesAPI(TestCase):
+    """
+    Тестирование метода CreateGroupMessages
+    """
+    env: environ.Env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    message: str = "Hello from tests"
+    author: int = 5
+    group: int = 1
+    data: dict = {
+        "message": message,
+        "author": author,
+        "group_chat": group
+    }
+    bad_data: dict = {
+        "message": message,
+    }
+    unauthorized_api: Response = \
+        requests.post("http://127.0.0.1:8000/api/groupmessages/create/")
+    authorized_api: Response = \
+        requests.post("http://127.0.0.1:8000/api/groupmessages/create/",
+                      auth=credentials,
+                      data=data)
+    unsuccessful_api: Response = \
+        requests.post("http://127.0.0.1:8000/api/groupmessages/create/",
+                      auth=credentials,
+                      data=bad_data)
+
+    def test_create_group_messages_returns_201(self) -> None:
+        """
+        Тестирование, что метод возвращает 200 и создается групповое сообщение
+        """
+        content = self.authorized_api.json()
+        self.assertEqual(self.authorized_api.status_code, 201)
+        self.assertEqual(content["message"], self.message)
+        self.assertEqual(content["author"], self.author)
+        self.assertEqual(content["group_chat"], self.group)
+
+    def test_create_group_messages_returns_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+    def test_create_group_messages_returns_400(self) -> None:
+        """
+        Тестирование, что метод возвращает 400
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 400)
+
+
+class TestGetUsersAPI(TestCase):
+    """
+    Тестирование метода GetUsers
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    authorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/',
+                                            auth=credentials)
+    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/')
+    user_id: int = env.int("USER_ID")
+    username: str = env.str("LOGIN")
+    first_name: str = env.str("FIRST_NAME")
+    last_name: str = env.str("LAST_NAME")
+    count_model: int = get_user_model().objects.count()
+
+    def test_get_users_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200 с непустым телом ответа
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+        self.assertTrue(self.authorized_api.json())
+
+    def test_get_users_have_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает все необходимые поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content[0]["id"], self.user_id)
+        self.assertEqual(content[0]["username"], self.username)
+        self.assertEqual(content[0]["first_name"], self.first_name)
+        self.assertEqual(content[0]["last_name"], self.last_name)
+
+    def test_get_users_returns_all_users(self) -> None:
+        """
+        Тестирование, что метод возвращает всех пользователей
+        """
+        count: int = 0
+        for _ in self.authorized_api.json():
+            count += 1
+        self.assertEqual(self.count_model, count)
+
+    def test_get_users_returns_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+
+class TestGetUserInfoAPI(TestCase):
+    """
+    Тестирование метода GetUserInfo
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    authorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/1/',
+                                            auth=credentials)
+    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/1/')
+    unsuccessful_api: Response = requests.get('http://127.0.0.1:8000/api/users/2/',
+                                              auth=credentials)
+    user_id: int = env.int("USER_ID")
+    username: str = env.str("LOGIN")
+    first_name: str = env.str("FIRST_NAME")
+    last_name: str = env.str("LAST_NAME")
+
+    def test_get_user_info_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_get_user_info_returns_necessary_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content["id"], self.user_id)
+        self.assertEqual(content["username"], self.username)
+        self.assertEqual(content["first_name"], self.first_name)
+        self.assertEqual(content["last_name"], self.last_name)
+
+    def test_get_user_info_returns_correct_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает правильные типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content["id"], int)
+        self.assertIsInstance(content["username"], str)
+        self.assertIsInstance(content["first_name"], str)
+        self.assertIsInstance(content["last_name"], str)
+
+    def test_get_user_info_returns_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+    def test_get_user_info_returns_404(self) -> None:
+        """
+        Тестирование, что метод возвращает 404
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 404)
+
+
+class TestUpdateUserInfoAPI(TestCase):
+    """
+    Тестирование метода UpdateUserInfo
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN_2"), env.str("PASSWORD"))
+    user_id: int = env.int("RECIPIENT_ID")
+    username: str = env.str("LOGIN_2")
+    first_name: str = "Raymond"
+    last_name: str = "Grant"
+    data: dict = {
+        "id": user_id,
+        "username": username,
+        "first_name": first_name,
+        "last_name": last_name
+    }
+    bad_data: dict = {
+        "first_name": first_name
+    }
+    authorized_api: Response = requests.put('http://127.0.0.1:8000/api/users/5/update/',
+                                            auth=credentials,
+                                            data=data)
+    unauthorized_api: Response = requests.put('http://127.0.0.1:8000/api/users/5/update/',
+                                              data=data)
+    forbidden_api: Response = requests.put('http://127.0.0.1:8000/api/users/1/update/',
+                                           auth=credentials,
+                                           data=data)
+    unsuccessful_api: Response = requests.put('http://127.0.0.1:8000/api/users/5/update/',
+                                              auth=credentials,
+                                              data=bad_data)
+
+    def test_update_user_info_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_update_user_info_has_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые поля
+        """
+        self.assertEqual(self.authorized_api.json()["id"], self.user_id)
+        self.assertEqual(self.authorized_api.json()["username"], self.username)
+        self.assertEqual(self.authorized_api.json()["first_name"], self.first_name)
+        self.assertEqual(self.authorized_api.json()["last_name"], self.last_name)
+
+    def test_update_user_info_has_correct_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает запланированные типы данных
+        """
+        self.assertIsInstance(self.authorized_api.json()["id"], int)
+        self.assertIsInstance(self.authorized_api.json()["username"], str)
+        self.assertIsInstance(self.authorized_api.json()["first_name"], str)
+        self.assertIsInstance(self.authorized_api.json()["last_name"], str)
+
+    def test_update_user_info_returns_403_if_unauthorized(self) -> None:
+        """
+        Тестирование, что метод возвращает 403, если пользователь не авторизован
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+    def test_update_user_info_returns_403_if_different_user(self) -> None:
+        """
+        Тестирование, что метод возвращает 403, если пользователь не владелец профиля
+        и не администратор
+        """
+        self.assertEqual(self.forbidden_api.status_code, 403)
+
+    def test_update_user_info_returns_400(self) -> None:
+        """
+        Тестирование, что метод возвращает 400
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 400)
