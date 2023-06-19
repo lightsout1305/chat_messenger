@@ -72,8 +72,4 @@ class GroupChatSerializer(ModelSerializer):
         Настройка классовых переменных GroupChatSerializer
         """
         model: typing.ClassVar[Model] = GroupChat
-        fields: typing.ClassVar[tuple] = (
-            'id',
-            'title',
-            'slug'
-        )
+        fields: typing.ClassVar[tuple] = "__all__"

@@ -730,3 +730,225 @@ class TestUpdateUserInfoAPI(TestCase):
         Тестирование, что метод возвращает 400
         """
         self.assertEqual(self.unsuccessful_api.status_code, 400)
+
+
+class TestGetGroupChatAPI(TestCase):
+    """
+    Тестирование метода GetGroupChats
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    group_id: int = 1
+    title: str = "Test group chat"
+    slug: str = "test-group-chat"
+    count_model: int = GroupChat.objects.filter(deleted=None).count()
+    authorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupchats/',
+                                            auth=credentials)
+    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupchats/')
+
+    def test_get_group_chats_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_get_group_chats_have_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает все необходимые поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content[0]["id"], self.group_id)
+        self.assertEqual(content[0]["title"], self.title)
+        self.assertEqual(content[0]["slug"], self.slug)
+
+    def test_get_group_chats_have_required_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает все необходимые типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content[0]["id"], int)
+        self.assertIsInstance(content[0]["title"], str)
+        self.assertIsInstance(content[0]["slug"], str)
+
+    def test_get_group_chats_return_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+    def test_get_group_chats_return_all_records(self) -> None:
+        """
+        Тестирование, что метод возвращает все записи
+        """
+        count: int = 0
+        for _ in self.authorized_api.json():
+            count += 1
+        self.assertEqual(count, self.count_model)
+
+
+class TestCreateGroupChatAPI(TestCase):
+    """
+    Тестирование метода CreateGroupChat
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    title: str = "Hello from tests"
+    slug: str = "hello-from-tests"
+    data: dict = {
+        "title": title,
+        "slug": slug
+    }
+    bad_data: dict = {
+        "slug": slug
+    }
+    authorized_api: Response = requests.post("http://127.0.0.1:8000/api/groupchats/create/",
+                                             auth=credentials,
+                                             data=data)
+    unauthorized_api: Response = requests.post("http://127.0.0.1:8000/api/groupchats/create/",
+                                               data=data)
+    unsuccessful_api: Response = requests.post("http://127.0.0.1:8000/api/groupchats/create/",
+                                               auth=credentials,
+                                               data=bad_data)
+
+    def test_create_group_chat_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200 и создает групповой чат
+        """
+        self.assertEqual(self.authorized_api.status_code, 201)
+
+    def test_create_group_chat_has_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает все необходимые поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content["title"], self.title)
+        self.assertEqual(content["slug"], self.slug)
+
+    def test_create_group_chat_has_required_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает все необходимые типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content["title"], str)
+        self.assertIsInstance(content["slug"], str)
+
+    def test_create_group_chat_returns_400(self) -> None:
+        """
+        Тестирование, что метод возвращает 400
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 400)
+
+    def test_create_group_chat_returns_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+
+class TestUpdateGroupChatAPI(TestCase):
+    """
+    Тестирование метода UpdateGroupChat
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    group_id: int = 3
+    title: str = "Hello from tests modified"
+    slug: str = "hello-from-tests-modified"
+    data: dict = {
+        "id": group_id,
+        "title": title,
+        "slug": slug
+    }
+    bad_data: dict = {
+        "id": group_id,
+        "slug": slug
+    }
+    authorized_api: Response = requests.put(f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
+                                            auth=credentials,
+                                            data=data)
+    unauthorized_api: Response = requests.put(f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
+                                              data=data)
+    unsuccessful_api: Response = requests.put(f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
+                                              auth=credentials,
+                                              data=bad_data)
+
+    def test_update_group_chat_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_update_group_chat_has_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content["id"], self.group_id)
+        self.assertEqual(content["title"], self.title)
+        self.assertEqual(content["slug"], self.slug)
+
+    def test_update_group_chat_has_required_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content["id"], int)
+        self.assertIsInstance(content["title"], str)
+        self.assertIsInstance(content["slug"], str)
+
+    def test_update_group_chat_returns_400(self) -> None:
+        """
+        Тестирование, что метод возвращает 400
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 400)
+
+    def test_update_group_chat_returns_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+
+class TestDeleteGroupChatAPI(TestCase):
+    """
+    Тестирование метода DeleteGroupChat
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    group_id: int = int(input("Введите id группы для удаления:\n"))
+    data: dict = {
+        "id": group_id
+    }
+    bad_data: dict = {
+        "id": 4
+    }
+    authorized_api: Response = requests.post(f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
+                                             auth=credentials,
+                                             data=data)
+    unauthorized_api: Response = requests.post(f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
+                                               data=data)
+    unsuccessful_api: Response = requests.post(f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
+                                               auth=credentials,
+                                               data=bad_data)
+
+    def test_delete_group_chat_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_delete_group_chat_returns_400(self) -> None:
+        """
+        Тестирование, что метод возвращает 400
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 400)
+
+    def test_delete_group_chat_returns_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)

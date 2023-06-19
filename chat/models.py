@@ -16,6 +16,15 @@ class GroupChat(models.Model):
     slug: typing.Type[models.SlugField] = models.SlugField(
         max_length=100
     )
+    created: typing.Type[models.DateTimeField] = models.DateTimeField(
+        auto_now_add=True
+    )
+    modified: typing.Type[models.DateTimeField] = models.DateTimeField(
+        auto_now=True
+    )
+    deleted: typing.Type[models.DateTimeField] = models.DateTimeField(
+        blank=True, null=True
+    )
 
     def __str__(self) -> str:
         """
@@ -39,6 +48,9 @@ class GroupMessages(models.Model):
     )
     modified: typing.Type[models.DateTimeField] = models.DateTimeField(
         auto_now=True
+    )
+    deleted: typing.Type[models.DateTimeField] = models.DateTimeField(
+        blank=True, null=True
     )
     group_chat: typing.Type[models.ForeignKey] = models.ForeignKey(
         GroupChat, on_delete=models.CASCADE
@@ -66,6 +78,9 @@ class Messages(models.Model):
     )
     modified: typing.Type[models.DateTimeField] = models.DateTimeField(
         auto_now=True
+    )
+    deleted: typing.Type[models.DateTimeField] = models.DateTimeField(
+        blank=True, null=True
     )
     recipient: typing.Type[models.ForeignKey] = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='message_recipient'
