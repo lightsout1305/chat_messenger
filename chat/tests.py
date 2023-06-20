@@ -952,3 +952,138 @@ class TestDeleteGroupChatAPI(TestCase):
         Тестирование, что метод возвращает 403
         """
         self.assertEqual(self.unauthorized_api.status_code, 403)
+
+
+class TestGetGroupChatInfo(TestCase):
+    """
+    Тестирование метода GetGroupChatInfo
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    group_id: int = 2
+    title: str = "French group"
+    slug: str = "french-group"
+    authorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/groupchats/{group_id}/",
+                                            auth=credentials)
+    unauthorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/groupchats/{group_id}/")
+    unsuccessful_api: Response = requests.get("http://127.0.0.1:8000/api/groupchats/4/",
+                                              auth=credentials)
+
+    def test_get_group_chat_info_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_get_group_chat_info_has_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content["id"], self.group_id)
+        self.assertEqual(content["title"], self.title)
+        self.assertEqual(content["slug"], self.slug)
+
+    def test_get_group_chat_info_has_required_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content["id"], int)
+        self.assertIsInstance(content["title"], str)
+        self.assertIsInstance(content["slug"], str)
+
+    def test_get_group_chat_info_returns_404(self) -> None:
+        """
+        Тестирование, что метод возвращает 400
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 404)
+
+    def test_get_group_chat_info_returns_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+
+class TestGetUserImage(TestCase):
+    """
+    Тестирование метода GetUserImage
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN_2"), env.str("PASSWORD"))
+    user_id: int = env.int("RECIPIENT_ID")
+    image_id: int = 1
+    image: str = "http://127.0.0.1:8000/media/chrome_qRgQ8z1ziS_EyfraeE.png"
+    authorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/",
+                                            auth=credentials)
+    unauthorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/")
+    unsuccessful_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/2/images/",
+                                              auth=credentials)
+
+    def test_get_user_image_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_get_user_image_has_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает все необходимые поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content["id"], self.image_id)
+        self.assertEqual(content["user"], self.user_id)
+        self.assertEqual(content["image"], self.image)
+
+    def test_get_user_image_has_required_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content["id"], int)
+        self.assertIsInstance(content["user"], int)
+        self.assertIsInstance(content["image"], str)
+
+    def test_get_user_image_returns_404(self) -> None:
+        """
+        Тестирование, что метод возвращает 404
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 404)
+
+    def test_get_user_image_returns_403(self) -> None:
+        """
+        Тестирование, что метод возвращает 403
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+
+class TestCreateUserImage(TestCase):
+    """
+    Тестирование метода CreateUserImage
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN_3"), env.str("PASSWORD"))
+    user_id: int = 6
+    image: str = "test.png"
+    data: dict = {
+        "user": user_id,
+        "image": image
+    }
+    bad_data: dict = {
+        "image": image
+    }
+    authorized_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
+                                             auth=credentials,
+                                             data=data)
+    unauthorized_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
+                                               data=data)
+    unsuccessful_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
+                                               auth=credentials,
+                                               data=bad_data)
+    forbidden_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/5/images/create/",
+                                            auth=credentials,
+                                            data=data)

@@ -72,6 +72,10 @@ class GetUsers(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
+    def get_queryset(self):
+        queryset = get_user_model().objects.all().order_by('id')
+        return queryset
+
 
 class GetUserInfo(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
@@ -99,6 +103,21 @@ class GetGroupChatInfo(generics.RetrieveAPIView):
     queryset = GroupChat.objects.all()
     serializer_class = GroupChatSerializer
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        group_chat = GroupChat.objects.get(id=kwargs['pk'])
+        pk = group_chat.pk
+        title = group_chat.title
+        slug = group_chat.slug
+        group_chat_data = {
+            "id": pk,
+            "title": title,
+            "slug": slug
+        }
+        if group_chat.deleted is None:
+            return Response(group_chat_data, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class CreateGroupChat(generics.CreateAPIView):
@@ -129,19 +148,19 @@ class DeleteGroupChat(generics.CreateAPIView):
 
 class CreateUserImage(generics.CreateAPIView):
     serializer_class = UserImageSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsProfileOwner]
     lookup_field = 'user_id'
 
 
 class GetUserImage(generics.RetrieveAPIView):
     serializer_class = UserImageSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     queryset = UserImage.objects.all()
     lookup_field = 'user_id'
 
 
 class UpdateUserImage(generics.UpdateAPIView):
     serializer_class = UserImageSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsProfileOwner]
     queryset = UserImage.objects.all()
     lookup_field = 'user_id'
