@@ -1016,7 +1016,7 @@ class TestGetUserImage(TestCase):
     credentials: typing.Tuple[str, str] = (env.str("LOGIN_3"), env.str("PASSWORD"))
     user_id: int = 6
     image_id: int = 5
-    image: str = "/media/test.png"
+    image: str = "/media/she.png"
     authorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/",
                                             auth=credentials)
     unauthorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/")

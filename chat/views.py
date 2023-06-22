@@ -148,15 +148,19 @@ class DeleteGroupChat(generics.CreateAPIView):
 
 class CreateUserImage(generics.CreateAPIView):
     serializer_class = UserImageSerializer
-    permission_classes = [IsProfileOwner]
+    permission_classes = [IsAuthenticated]
     lookup_field = 'user_id'
 
     def post(self, request, *args, **kwargs):
         user_image = UserImage.objects.filter(user_id=kwargs['user_id'], deleted=None).last()
         if not user_image:
-            user_image = UserImage.objects.create(user_id=kwargs['user_id'], image=request.data['image'])
-            user_image.save()
-            return Response(status=status.HTTP_200_OK)
+            user = get_user_model().objects.get(id=kwargs['user_id'])
+            if request.user == user:
+                user_image = UserImage.objects.create(user_id=kwargs['user_id'], image=request.data['image'])
+                user_image.save()
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_403_FORBIDDEN)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -178,7 +182,7 @@ class GetUserImage(generics.RetrieveAPIView):
 
 class UpdateUserImage(generics.UpdateAPIView):
     serializer_class = UserImageSerializer
-    permission_classes = [IsProfileOwner]
+    permission_classes = [IsAuthenticated]
     queryset = UserImage.objects.all()
     lookup_field = 'user_id'
 
@@ -187,19 +191,23 @@ class UpdateUserImage(generics.UpdateAPIView):
         if not user_image:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
-            serial = self.serializer_class(None, request.data)
-            if serial.is_valid():
-                user_image.user = get_user_model().objects.get(id=kwargs['user_id'])
-                user_image.image = request.data['image']
-                user_image.save()
-                return Response(status=status.HTTP_200_OK)
+            serial = self.serializer_class(user_image, request.data)
+            user = get_user_model().objects.get(id=kwargs['user_id'])
+            if request.user == user:
+                if serial.is_valid():
+                    user_image.user = get_user_model().objects.get(id=kwargs['user_id'])
+                    user_image.image = request.data['image']
+                    user_image.save()
+                    return Response(status=status.HTTP_200_OK)
+                else:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_403_FORBIDDEN)
 
 
 class DeleteUserImage(generics.CreateAPIView):
     serializer_class = UserImageSerializer
-    permission_classes = [IsProfileOwner]
+    permission_classes = [IsAuthenticated]
     queryset = UserImage.objects.all()
     lookup_field = 'user_id'
 
@@ -208,6 +216,10 @@ class DeleteUserImage(generics.CreateAPIView):
         if not user_image:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
-            user_image.deleted = timezone.now()
-            user_image.save()
-            return Response(status=status.HTTP_200_OK)
+            user = get_user_model().objects.get(id=kwargs['user_id'])
+            if request.user == user:
+                user_image.deleted = timezone.now()
+                user_image.save()
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_403_FORBIDDEN)
