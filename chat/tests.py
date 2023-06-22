@@ -1013,10 +1013,10 @@ class TestGetUserImage(TestCase):
     """
     env = environ.Env()
     env.read_env()
-    credentials: typing.Tuple[str, str] = (env.str("LOGIN_2"), env.str("PASSWORD"))
-    user_id: int = env.int("RECIPIENT_ID")
-    image_id: int = 1
-    image: str = "http://127.0.0.1:8000/media/chrome_qRgQ8z1ziS_EyfraeE.png"
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN_3"), env.str("PASSWORD"))
+    user_id: int = 6
+    image_id: int = 5
+    image: str = "/media/test.png"
     authorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/",
                                             auth=credentials)
     unauthorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/")
@@ -1087,3 +1087,4 @@ class TestCreateUserImage(TestCase):
     forbidden_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/5/images/create/",
                                             auth=credentials,
                                             data=data)
+

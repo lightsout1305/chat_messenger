@@ -13,6 +13,7 @@ urlpatterns = [
     path('users/<int:user_id>/images/', views.GetUserImage.as_view(), name='user_image'),
     path('users/<int:user_id>/images/create/', views.CreateUserImage.as_view(), name='create_user_image'),
     path('users/<int:user_id>/images/update/', views.UpdateUserImage.as_view(), name='update_user_image'),
+    path('users/<int:user_id>/images/delete/', views.DeleteUserImage.as_view(), name='delete_user_image'),
     path('groupchats/', views.GetGroupChats.as_view(), name='group_chat_list'),
     path('groupchats/<int:pk>/', views.GetGroupChatInfo.as_view(), name='group_chat_detail'),
     path('groupchats/create/', views.CreateGroupChat.as_view(), name='create_group_chat'),

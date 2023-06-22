@@ -4,6 +4,7 @@
 import typing
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class GroupChat(models.Model):
@@ -101,3 +102,12 @@ class UserImage(models.Model):
         User, on_delete=models.CASCADE, related_name='user_photo'
     )
     image: typing.Type[models.ImageField] = models.ImageField()
+    created: typing.Type[models.DateTimeField] = models.DateTimeField(
+        auto_now_add=True
+    )
+    modified: typing.Type[models.DateTimeField] = models.DateTimeField(
+        auto_now=True
+    )
+    deleted: typing.Type[models.DateTimeField] = models.DateTimeField(
+        blank=True, null=True
+    )

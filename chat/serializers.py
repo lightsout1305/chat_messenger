@@ -18,7 +18,7 @@ class MessageSerializer(ModelSerializer):
         Настройка классовых переменных MessageSerializer
         """
         model: typing.ClassVar[Model] = Messages
-        fields: typing.ClassVar[tuple] = "__all__"
+        exclude = ('deleted',)
 
 
 class GroupMessageSerializer(ModelSerializer):
@@ -31,7 +31,7 @@ class GroupMessageSerializer(ModelSerializer):
         Настройка классовых переменных GroupMessageSerializer
         """
         model: typing.ClassVar[Model] = GroupMessages
-        fields: typing.ClassVar[tuple] = "__all__"
+        exclude: typing.ClassVar[tuple] = ('deleted',)
 
 
 class UserSerializer(ModelSerializer):
@@ -60,7 +60,7 @@ class UserImageSerializer(ModelSerializer):
         Настройка классовых переменных UserImageSerializer
         """
         model: typing.ClassVar[Model] = UserImage
-        fields: typing.ClassVar[tuple] = "__all__"
+        exclude: typing.ClassVar[tuple] = ('deleted', )
 
 
 class GroupChatSerializer(ModelSerializer):
@@ -72,4 +72,4 @@ class GroupChatSerializer(ModelSerializer):
         Настройка классовых переменных GroupChatSerializer
         """
         model: typing.ClassVar[Model] = GroupChat
-        fields: typing.ClassVar[tuple] = "__all__"
+        exclude = ('deleted',)

@@ -2,7 +2,7 @@
 Модуль с API и представлениями проекта
 """
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
@@ -95,7 +95,7 @@ class GetGroupChats(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = GroupChat.objects.filter(deleted=None).order_by('created')
+        queryset = GroupChat.objects.filter(deleted=None).order_by('id')
         return queryset
 
 
@@ -151,6 +151,15 @@ class CreateUserImage(generics.CreateAPIView):
     permission_classes = [IsProfileOwner]
     lookup_field = 'user_id'
 
+    def post(self, request, *args, **kwargs):
+        user_image = UserImage.objects.filter(user_id=kwargs['user_id'], deleted=None).last()
+        if not user_image:
+            user_image = UserImage.objects.create(user_id=kwargs['user_id'], image=request.data['image'])
+            user_image.save()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 class GetUserImage(generics.RetrieveAPIView):
     serializer_class = UserImageSerializer
@@ -158,9 +167,47 @@ class GetUserImage(generics.RetrieveAPIView):
     queryset = UserImage.objects.all()
     lookup_field = 'user_id'
 
+    def get(self, request, *args, **kwargs):
+        user_image = UserImage.objects.filter(user_id=kwargs['user_id'], deleted=None).last()
+        if not user_image:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            data = self.serializer_class(user_image)
+            return Response(data=data.data, status=status.HTTP_200_OK)
+
 
 class UpdateUserImage(generics.UpdateAPIView):
     serializer_class = UserImageSerializer
     permission_classes = [IsProfileOwner]
     queryset = UserImage.objects.all()
     lookup_field = 'user_id'
+
+    def put(self, request, *args, **kwargs):
+        user_image = UserImage.objects.filter(user_id=kwargs["user_id"], deleted=None).last()
+        if not user_image:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serial = self.serializer_class(None, request.data)
+            if serial.is_valid():
+                user_image.user = get_user_model().objects.get(id=kwargs['user_id'])
+                user_image.image = request.data['image']
+                user_image.save()
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteUserImage(generics.CreateAPIView):
+    serializer_class = UserImageSerializer
+    permission_classes = [IsProfileOwner]
+    queryset = UserImage.objects.all()
+    lookup_field = 'user_id'
+
+    def post(self, request, *args, **kwargs):
+        user_image = UserImage.objects.filter(user_id=kwargs["user_id"], deleted=None).last()
+        if not user_image:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user_image.deleted = timezone.now()
+            user_image.save()
+            return Response(status=status.HTTP_200_OK)
