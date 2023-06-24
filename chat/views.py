@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .models import GroupMessages, GroupChat, UserImage, Messages
 from .serializers import GroupMessageSerializer, UserSerializer, GroupChatSerializer, \
-    UserImageSerializer, MessageSerializer
+    UserImageSerializer, MessageSerializer, UserImageCUSerializer
 from .permissions import IsProfileOwner
 
 
@@ -156,9 +156,13 @@ class CreateUserImage(generics.CreateAPIView):
         if not user_image:
             user = get_user_model().objects.get(id=kwargs['user_id'])
             if request.user == user:
-                user_image = UserImage.objects.create(user_id=kwargs['user_id'], image=request.data['image'])
-                user_image.save()
-                return Response(status=status.HTTP_200_OK)
+                if request.data['image']:
+                    user_image = UserImage.objects.create(user_id=kwargs['user_id'], image=request.data['image'])
+                    user_image.save()
+                    data = self.serializer_class(user_image)
+                    return Response(data=data.data, status=status.HTTP_200_OK)
+                else:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response(status=status.HTTP_403_FORBIDDEN)
         else:
@@ -166,7 +170,7 @@ class CreateUserImage(generics.CreateAPIView):
 
 
 class GetUserImage(generics.RetrieveAPIView):
-    serializer_class = UserImageSerializer
+    serializer_class = UserImageCUSerializer
     permission_classes = [IsAuthenticated]
     queryset = UserImage.objects.all()
     lookup_field = 'user_id'
@@ -181,7 +185,7 @@ class GetUserImage(generics.RetrieveAPIView):
 
 
 class UpdateUserImage(generics.UpdateAPIView):
-    serializer_class = UserImageSerializer
+    serializer_class = UserImageCUSerializer
     permission_classes = [IsAuthenticated]
     queryset = UserImage.objects.all()
     lookup_field = 'user_id'
@@ -191,14 +195,14 @@ class UpdateUserImage(generics.UpdateAPIView):
         if not user_image:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
-            serial = self.serializer_class(user_image, request.data)
             user = get_user_model().objects.get(id=kwargs['user_id'])
             if request.user == user:
-                if serial.is_valid():
-                    user_image.user = get_user_model().objects.get(id=kwargs['user_id'])
+                user_image.user = get_user_model().objects.get(id=kwargs['user_id'])
+                if request.data['image']:
                     user_image.image = request.data['image']
                     user_image.save()
-                    return Response(status=status.HTTP_200_OK)
+                    data = self.serializer_class(user_image)
+                    return Response(data=data.data, status=status.HTTP_200_OK)
                 else:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
             else:

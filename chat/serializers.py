@@ -60,7 +60,20 @@ class UserImageSerializer(ModelSerializer):
         Настройка классовых переменных UserImageSerializer
         """
         model: typing.ClassVar[Model] = UserImage
-        exclude: typing.ClassVar[tuple] = ('deleted', )
+        exclude: typing.ClassVar[tuple] = ('deleted', 'created', 'modified')
+
+
+class UserImageCUSerializer(ModelSerializer):
+    class Meta:
+        model: typing.ClassVar[Model] = UserImage
+        exclude: typing.ClassVar[tuple] = ('deleted', 'created', 'modified')
+        extra_kwargs: typing.ClassVar[dict] = {'image': {'required': True}, 'user': {'required': True}}
+
+
+class UserImageDeleteSerializer(ModelSerializer):
+    class Meta:
+        model: typing.ClassVar[Model] = UserImage
+        fields: typing.ClassVar[tuple] = ('id', )
 
 
 class GroupChatSerializer(ModelSerializer):

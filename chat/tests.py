@@ -252,27 +252,35 @@ class TestGetMessagesAPI(TestCase):
     env = environ.Env()
     env.read_env()
     credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
-    unauthorized_api: Response = requests.get("http://127.0.0.1:8000/api/messages")
+    unauthorized_api: Response = requests.get("http://127.0.0.1:8000/api/messages",
+                                              timeout=5)
     authorized_api: Response = requests.get("http://127.0.0.1:8000/api/messages",
-                                            auth=credentials)
+                                            auth=credentials,
+                                            timeout=5)
     api_with_author: Response = \
         requests.get("http://127.0.0.1:8000/api/messages?author=lightsout",
-                     auth=credentials)
+                     auth=credentials,
+                     timeout=5)
     api_with_nonexistent_author: Response = \
         requests.get("http://127.0.0.1:8000/api/messages?author=zorro",
-                     auth=credentials)
+                     auth=credentials,
+                     timeout=5)
     api_with_recipient: Response = \
         requests.get("http://127.0.0.1:8000/api/messages?recipient=raymond",
-                     auth=credentials)
+                     auth=credentials,
+                     timeout=5)
     api_with_nonexistent_recipient: Response = \
         requests.get("http://127.0.0.1:8000/api/messages?recipient=lol",
-                     auth=credentials)
+                     auth=credentials,
+                     timeout=5)
     api_with_both_author_and_recipient: Response = \
         requests.get("http://127.0.0.1:8000/api/messages?author=lightsout"
-                     "&recipient=raymond", auth=credentials)
+                     "&recipient=raymond", auth=credentials,
+                     timeout=5)
     api_with_at_least_one_nonexistent_person: Response = \
         requests.get("http://127.0.0.1:8000/api/messages?author"
-                     "=lightsout&recipient=kek", auth=credentials)
+                     "=lightsout&recipient=kek", auth=credentials,
+                     timeout=5)
     message_id: int = 1
     message: str = "Salut!"
     author: typing.Callable = env.int("USER_ID")
@@ -365,7 +373,7 @@ class TestCreateMessageAPI(TestCase):
     message: str = "Hello from tests"
     author: int = 5
     recipient: int = 1
-    data: dict = {
+    good_data: dict = {
         "message": message,
         "author": author,
         "recipient": recipient
@@ -373,13 +381,16 @@ class TestCreateMessageAPI(TestCase):
     bad_data: dict = {
         "message": message,
     }
-    unauthorized_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/")
+    unauthorized_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/",
+                                               timeout=5)
     authorized_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/",
                                              auth=credentials,
-                                             data=data)
+                                             json=good_data,
+                                             timeout=5)
     unsuccessful_api: Response = requests.post("http://127.0.0.1:8000/api/messages/create/",
                                                auth=credentials,
-                                               data=bad_data)
+                                               json=bad_data,
+                                               timeout=5)
 
     def test_create_message_returns_200(self) -> None:
         """
@@ -411,15 +422,19 @@ class TestGetGroupMessagesAPI(TestCase):
     env: environ.Env = environ.Env()
     env.read_env()
     credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
-    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupmessages')
+    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupmessages',
+                                              timeout=5)
     authorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupmessages',
-                                            auth=credentials)
+                                            auth=credentials,
+                                            timeout=5)
     api_with_group_chat: Response = \
         requests.get('http://127.0.0.1:8000/api/groupmessages?group-chat=french-group',
-                     auth=credentials)
+                     auth=credentials,
+                     timeout=5)
     api_with_nonexistent_group_chat: Response = \
         requests.get('http://127.0.0.1:8000/api/groupmessages?group-chat=lel',
-                     auth=credentials)
+                     auth=credentials,
+                     timeout=5)
     message_id: int = 1
     message: str = "Test"
     author: typing.Callable = env.int("USER_ID")
@@ -509,7 +524,7 @@ class TestCreateGroupMessagesAPI(TestCase):
     message: str = "Hello from tests"
     author: int = 5
     group: int = 1
-    data: dict = {
+    good_data: dict = {
         "message": message,
         "author": author,
         "group_chat": group
@@ -518,15 +533,17 @@ class TestCreateGroupMessagesAPI(TestCase):
         "message": message,
     }
     unauthorized_api: Response = \
-        requests.post("http://127.0.0.1:8000/api/groupmessages/create/")
+        requests.post("http://127.0.0.1:8000/api/groupmessages/create/", timeout=5)
     authorized_api: Response = \
         requests.post("http://127.0.0.1:8000/api/groupmessages/create/",
                       auth=credentials,
-                      data=data)
+                      json=good_data,
+                      timeout=5)
     unsuccessful_api: Response = \
         requests.post("http://127.0.0.1:8000/api/groupmessages/create/",
                       auth=credentials,
-                      data=bad_data)
+                      json=bad_data,
+                      timeout=5)
 
     def test_create_group_messages_returns_201(self) -> None:
         """
@@ -559,8 +576,10 @@ class TestGetUsersAPI(TestCase):
     env.read_env()
     credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
     authorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/',
-                                            auth=credentials)
-    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/')
+                                            auth=credentials,
+                                            timeout=5)
+    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/',
+                                              timeout=5)
     user_id: int = env.int("USER_ID")
     username: str = env.str("LOGIN")
     first_name: str = env.str("FIRST_NAME")
@@ -608,10 +627,13 @@ class TestGetUserInfoAPI(TestCase):
     env.read_env()
     credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
     authorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/1/',
-                                            auth=credentials)
-    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/1/')
+                                            auth=credentials,
+                                            timeout=5)
+    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/1/',
+                                              timeout=5)
     unsuccessful_api: Response = requests.get('http://127.0.0.1:8000/api/users/2/',
-                                              auth=credentials)
+                                              auth=credentials,
+                                              timeout=5)
     user_id: int = env.int("USER_ID")
     username: str = env.str("LOGIN")
     first_name: str = env.str("FIRST_NAME")
@@ -667,7 +689,7 @@ class TestUpdateUserInfoAPI(TestCase):
     username: str = env.str("LOGIN_2")
     first_name: str = "Raymond"
     last_name: str = "Grant"
-    data: dict = {
+    good_data: dict = {
         "id": user_id,
         "username": username,
         "first_name": first_name,
@@ -678,15 +700,19 @@ class TestUpdateUserInfoAPI(TestCase):
     }
     authorized_api: Response = requests.put('http://127.0.0.1:8000/api/users/5/update/',
                                             auth=credentials,
-                                            data=data)
+                                            json=good_data,
+                                            timeout=5)
     unauthorized_api: Response = requests.put('http://127.0.0.1:8000/api/users/5/update/',
-                                              data=data)
+                                              json=good_data,
+                                              timeout=5)
     forbidden_api: Response = requests.put('http://127.0.0.1:8000/api/users/1/update/',
                                            auth=credentials,
-                                           data=data)
+                                           json=good_data,
+                                           timeout=5)
     unsuccessful_api: Response = requests.put('http://127.0.0.1:8000/api/users/5/update/',
                                               auth=credentials,
-                                              data=bad_data)
+                                              json=bad_data,
+                                              timeout=5)
 
     def test_update_user_info_returns_200(self) -> None:
         """
@@ -744,8 +770,10 @@ class TestGetGroupChatAPI(TestCase):
     slug: str = "test-group-chat"
     count_model: int = GroupChat.objects.filter(deleted=None).count()
     authorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupchats/',
-                                            auth=credentials)
-    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupchats/')
+                                            auth=credentials,
+                                            timeout=5)
+    unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/groupchats/',
+                                              timeout=5)
 
     def test_get_group_chats_returns_200(self) -> None:
         """
@@ -787,7 +815,7 @@ class TestGetGroupChatAPI(TestCase):
         self.assertEqual(count, self.count_model)
 
 
-class TestCreateGroupChatAPI(TestCase):
+class TestCreateGroupChat(TestCase):
     """
     Тестирование метода CreateGroupChat
     """
@@ -796,7 +824,7 @@ class TestCreateGroupChatAPI(TestCase):
     credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
     title: str = "Hello from tests"
     slug: str = "hello-from-tests"
-    data: dict = {
+    good_data: dict = {
         "title": title,
         "slug": slug
     }
@@ -805,12 +833,15 @@ class TestCreateGroupChatAPI(TestCase):
     }
     authorized_api: Response = requests.post("http://127.0.0.1:8000/api/groupchats/create/",
                                              auth=credentials,
-                                             data=data)
+                                             json=good_data,
+                                             timeout=5)
     unauthorized_api: Response = requests.post("http://127.0.0.1:8000/api/groupchats/create/",
-                                               data=data)
+                                               json=good_data,
+                                               timeout=5)
     unsuccessful_api: Response = requests.post("http://127.0.0.1:8000/api/groupchats/create/",
                                                auth=credentials,
-                                               data=bad_data)
+                                               json=bad_data,
+                                               timeout=5)
 
     def test_create_group_chat_returns_200(self) -> None:
         """
@@ -847,7 +878,7 @@ class TestCreateGroupChatAPI(TestCase):
         self.assertEqual(self.unauthorized_api.status_code, 403)
 
 
-class TestUpdateGroupChatAPI(TestCase):
+class TestUpdateGroupChat(TestCase):
     """
     Тестирование метода UpdateGroupChat
     """
@@ -866,14 +897,20 @@ class TestUpdateGroupChatAPI(TestCase):
         "id": group_id,
         "slug": slug
     }
-    authorized_api: Response = requests.put(f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
-                                            auth=credentials,
-                                            data=data)
-    unauthorized_api: Response = requests.put(f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
-                                              data=data)
-    unsuccessful_api: Response = requests.put(f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
-                                              auth=credentials,
-                                              data=bad_data)
+    authorized_api: Response = requests.put(
+        f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
+        auth=credentials,
+        json=data,
+        timeout=5)
+    unauthorized_api: Response = requests.put(
+        f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
+        json=data,
+        timeout=5)
+    unsuccessful_api: Response = requests.put(
+        f"http://127.0.0.1:8000/api/groupchats/{group_id}/update/",
+        auth=credentials,
+        json=bad_data,
+        timeout=5)
 
     def test_update_group_chat_returns_200(self) -> None:
         """
@@ -912,7 +949,7 @@ class TestUpdateGroupChatAPI(TestCase):
         self.assertEqual(self.unauthorized_api.status_code, 403)
 
 
-class TestDeleteGroupChatAPI(TestCase):
+class TestDeleteGroupChat(TestCase):
     """
     Тестирование метода DeleteGroupChat
     """
@@ -920,20 +957,26 @@ class TestDeleteGroupChatAPI(TestCase):
     env.read_env()
     credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
     group_id: int = int(input("Введите id группы для удаления:\n"))
-    data: dict = {
+    good_data: dict = {
         "id": group_id
     }
     bad_data: dict = {
         "id": 4
     }
-    authorized_api: Response = requests.post(f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
-                                             auth=credentials,
-                                             data=data)
-    unauthorized_api: Response = requests.post(f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
-                                               data=data)
-    unsuccessful_api: Response = requests.post(f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
-                                               auth=credentials,
-                                               data=bad_data)
+    authorized_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
+        auth=credentials,
+        json=good_data,
+        timeout=5)
+    unauthorized_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
+        json=good_data,
+        timeout=5)
+    unsuccessful_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/groupchats/{group_id}/delete/",
+        auth=credentials,
+        data=bad_data,
+        timeout=5)
 
     def test_delete_group_chat_returns_200(self) -> None:
         """
@@ -965,10 +1008,13 @@ class TestGetGroupChatInfo(TestCase):
     title: str = "French group"
     slug: str = "french-group"
     authorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/groupchats/{group_id}/",
-                                            auth=credentials)
-    unauthorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/groupchats/{group_id}/")
+                                            auth=credentials,
+                                            timeout=5)
+    unauthorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/groupchats/{group_id}/",
+                                              timeout=5)
     unsuccessful_api: Response = requests.get("http://127.0.0.1:8000/api/groupchats/4/",
-                                              auth=credentials)
+                                              auth=credentials,
+                                              timeout=5)
 
     def test_get_group_chat_info_returns_200(self) -> None:
         """
@@ -1018,10 +1064,13 @@ class TestGetUserImage(TestCase):
     image_id: int = 5
     image: str = "/media/she.png"
     authorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/",
-                                            auth=credentials)
-    unauthorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/")
-    unsuccessful_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/2/images/",
-                                              auth=credentials)
+                                            auth=credentials,
+                                            timeout=5)
+    unauthorized_api: Response = requests.get(f"http://127.0.0.1:8000/api/users/{user_id}/images/",
+                                              timeout=5)
+    unsuccessful_api: Response = requests.get("http://127.0.0.1:8000/api/users/2/images/",
+                                              auth=credentials,
+                                              timeout=5)
 
     def test_get_user_image_returns_200(self) -> None:
         """
@@ -1066,25 +1115,224 @@ class TestCreateUserImage(TestCase):
     """
     env = environ.Env()
     env.read_env()
-    credentials: typing.Tuple[str, str] = (env.str("LOGIN_3"), env.str("PASSWORD"))
-    user_id: int = 6
-    image: str = "test.png"
-    data: dict = {
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN_2"), env.str("PASSWORD"))
+    user_id: int = 5
+    image: str = "test_1.png"
+    good_data: dict = {
         "user": user_id,
         "image": image
     }
     bad_data: dict = {
+        "image": None,
+        "user": user_id
+    }
+    authorized_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
+        auth=credentials,
+        json=good_data,
+        timeout=5)
+    authorized_api_again: Response = requests.post(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
+        auth=credentials,
+        json=good_data,
+        timeout=5)
+    unauthorized_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
+        json=good_data,
+        timeout=5)
+    unsuccessful_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
+        auth=credentials,
+        json=bad_data,
+        timeout=5)
+    forbidden_api: Response = requests.post(
+        "http://127.0.0.1:8000/api/users/1/images/create/",
+        auth=credentials,
+        json=good_data,
+        timeout=5)
+
+    def test_create_user_image_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200 и создает изображение
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_create_user_image_has_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимыe поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content["user"], self.user_id)
+        self.assertEqual(content["image"], f"/media/{self.image}")
+
+    def test_create_user_image_returns_required_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content["user"], int)
+        self.assertIsInstance(content["image"], str)
+
+    def test_create_user_image_returns_400_if_bad_data(self) -> None:
+        """
+        Тестирование, что метод возвращает 400
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 400)
+
+    def test_create_user_image_returns_400_if_image_exists(self) -> None:
+        """
+        Тестирование, что метод возвращает 400, если изображение уже существует
+        """
+        self.assertEqual(self.authorized_api_again.status_code, 400)
+
+    def test_create_user_image_returns_403_if_different_user(self) -> None:
+        """
+        Тестирование, что метод возвращает 403, если не владелец профиля
+        """
+        self.assertEqual(self.forbidden_api.status_code, 403)
+
+    def test_create_user_image_returns_403_if_unauthorized(self) -> None:
+        """
+        Тестирование, что метод возвращает 403, если пользователь не авторизован
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+
+class TestUpdateUserImage(TestCase):
+    """
+    Тестирование метода UpdateUserImage
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN_2"), env.str("PASSWORD"))
+    user_id: int = 5
+    image: str = "test_updated.png"
+    good_data: dict = {
+        "user": user_id,
         "image": image
     }
-    authorized_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
-                                             auth=credentials,
-                                             data=data)
-    unauthorized_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
-                                               data=data)
-    unsuccessful_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/{user_id}/images/create/",
-                                               auth=credentials,
-                                               data=bad_data)
-    forbidden_api: Response = requests.post(f"http://127.0.0.1:8000/api/users/5/images/create/",
-                                            auth=credentials,
-                                            data=data)
+    bad_data: dict = {
+        "user": user_id,
+        "image": None
+    }
+    authorized_api: Response = requests.put(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/update/",
+        auth=credentials,
+        json=good_data,
+        timeout=5)
+    unauthorized_api: Response = requests.put(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/update/",
+        json=good_data,
+        timeout=5)
+    unsuccessful_api: Response = requests.put(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/update/",
+        auth=credentials,
+        json=bad_data,
+        timeout=5)
+    forbidden_api: Response = requests.put(
+        "http://127.0.0.1:8000/api/users/6/images/update/",
+        auth=credentials,
+        json=good_data,
+        timeout=5)
 
+    def test_update_user_image_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200 и обновляет изображение
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_update_user_image_has_required_fields(self) -> None:
+        """
+        Тестирование, что метод возвращает все необходимые поля
+        """
+        content: dict = self.authorized_api.json()
+        self.assertEqual(content["user"], self.user_id)
+        self.assertEqual(content["image"], f"/media/{self.image}")
+
+    def test_update_user_image_has_required_data_type(self) -> None:
+        """
+        Тестирование, что метод возвращает необходимые типы данных
+        """
+        content: dict = self.authorized_api.json()
+        self.assertIsInstance(content["id"], int)
+        self.assertIsInstance(content["user"], int)
+        self.assertIsInstance(content["image"], str)
+
+    def test_update_user_image_returns_400_if_bad_data(self) -> None:
+        """
+        Тестирование, что метод возвращает 400
+        """
+        self.assertEqual(self.unsuccessful_api.status_code, 400)
+
+    def test_update_user_image_returns_400_if_image_is_deleted(self) -> None:
+        """
+        Тестирование, что метод возвращает 400, если изображение удалено
+        """
+        requests.post(f"http://127.0.0.1:8000/api/users/{self.user_id}/images/delete/",
+                      auth=self.credentials,
+                      json=self.good_data,
+                      timeout=5)
+        api: Response = requests.put(
+            f"http://127.0.0.1:8000/api/users/{self.user_id}/images/update/",
+            auth=self.credentials,
+            json=self.good_data,
+            timeout=5)
+        self.assertEqual(api.status_code, 400)
+
+    def test_update_user_image_returns_403_if_different_user(self) -> None:
+        """
+        Тестирование, что метод возвращает 403, если не владелец профиля
+        """
+        self.assertEqual(self.forbidden_api.status_code, 403)
+
+    def test_update_user_image_returns_403_if_unauthorized(self) -> None:
+        """
+        Тестирование, что метод возвращает 403, если не авторизован
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
+
+
+class TestDeleteUserImage(TestCase):
+    """
+    Тестирование метода DeleteUserImage
+    """
+    env = environ.Env()
+    env.read_env()
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN_2"), env.str("PASSWORD"))
+    user_id: int = 5
+    forbidden_user_id: int = 6
+    deletion_data: dict = {
+        "user": user_id,
+    }
+    authorized_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/delete/",
+        auth=credentials,
+        json=deletion_data,
+        timeout=5)
+    unauthorized_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/users/{user_id}/images/delete/",
+        json=deletion_data,
+        timeout=5)
+    forbidden_api: Response = requests.post(
+        f"http://127.0.0.1:8000/api/users/{forbidden_user_id}/images/delete/",
+        auth=credentials,
+        json=deletion_data,
+        timeout=5)
+
+    def test_delete_user_image_returns_200(self) -> None:
+        """
+        Тестирование, что метод возвращает 200 и удаляет изображение
+        """
+        self.assertEqual(self.authorized_api.status_code, 200)
+
+    def test_delete_user_image_returns_403_if_different_user(self) -> None:
+        """
+        Тестирование, что метод возвращает 403, если не владелец профиля
+        """
+        self.assertEqual(self.forbidden_api.status_code, 403)
+
+    def test_delete_user_image_returns_403_if_unauthorized(self) -> None:
+        """
+        Тестирование, что метод возвращает 403, если не авторизован
+        """
+        self.assertEqual(self.unauthorized_api.status_code, 403)
