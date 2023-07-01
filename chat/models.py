@@ -4,7 +4,6 @@
 import typing
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone
 
 
 class GroupChat(models.Model):
@@ -111,3 +110,9 @@ class UserImage(models.Model):
     deleted: typing.Type[models.DateTimeField] = models.DateTimeField(
         blank=True, null=True
     )
+
+    def __str__(self) -> str:
+        """
+        Строковое отображение изображения
+        """
+        return str(self.image)

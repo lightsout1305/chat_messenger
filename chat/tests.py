@@ -574,16 +574,17 @@ class TestGetUsersAPI(TestCase):
     """
     env = environ.Env()
     env.read_env()
-    credentials: typing.Tuple[str, str] = (env.str("LOGIN"), env.str("PASSWORD"))
+    credentials: typing.Tuple[str, str] = (env.str("LOGIN_3"), env.str("PASSWORD"))
     authorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/',
                                             auth=credentials,
                                             timeout=5)
     unauthorized_api: Response = requests.get('http://127.0.0.1:8000/api/users/',
                                               timeout=5)
-    user_id: int = env.int("USER_ID")
-    username: str = env.str("LOGIN")
-    first_name: str = env.str("FIRST_NAME")
-    last_name: str = env.str("LAST_NAME")
+    user_id: int = 6
+    username: str = env.str("LOGIN_3")
+    first_name: str = "Test"
+    last_name: str = "User"
+    image: str = "she.png"
     count_model: int = get_user_model().objects.count()
 
     def test_get_users_returns_200(self) -> None:
@@ -598,10 +599,11 @@ class TestGetUsersAPI(TestCase):
         Тестирование, что метод возвращает все необходимые поля
         """
         content: dict = self.authorized_api.json()
-        self.assertEqual(content[0]["id"], self.user_id)
-        self.assertEqual(content[0]["username"], self.username)
-        self.assertEqual(content[0]["first_name"], self.first_name)
-        self.assertEqual(content[0]["last_name"], self.last_name)
+        self.assertEqual(content[2]["id"], self.user_id)
+        self.assertEqual(content[2]["username"], self.username)
+        self.assertEqual(content[2]["first_name"], self.first_name)
+        self.assertEqual(content[2]["last_name"], self.last_name)
+        self.assertEqual(content[2]["image"], self.image)
 
     def test_get_users_returns_all_users(self) -> None:
         """

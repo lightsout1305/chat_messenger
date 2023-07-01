@@ -72,9 +72,25 @@ class GetUsers(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         queryset = get_user_model().objects.all().order_by('id')
-        return queryset
+        data = []
+        for user in queryset:
+            try:
+                image = UserImage.objects.get(deleted=None, user_id=user.id)
+                if user.id == image.user_id:
+                    data.append({"id": user.id,
+                                 "username": user.username,
+                                 "first_name": user.first_name,
+                                 "last_name": user.last_name,
+                                 "image": image.image.__str__()})
+            except UserImage.DoesNotExist:
+                data.append({"id": user.id,
+                             "username": user.username,
+                             "first_name": user.first_name,
+                             "last_name": user.last_name,
+                             "image": None})
+        return Response(data=data, status=status.HTTP_200_OK)
 
 
 class GetUserInfo(generics.RetrieveAPIView):
