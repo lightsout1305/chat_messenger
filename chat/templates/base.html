@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <title>ChatterBox</title>
+    <link href="{% static "css/base.css" %}" rel="stylesheet">
+</head>
+<body>
+    <div class="chatterbox-header">
+        <h1>ChatterBox</h1>
+        {% block title %}
+        {% endblock %}
+    </div>
+    <div class="chatterbox-menu">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

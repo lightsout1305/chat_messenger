@@ -5,7 +5,7 @@ import typing
 from rest_framework.serializers import ModelSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import Model
-from .models import GroupMessages, UserImage, GroupChat, Messages
+from chat.models import GroupMessages, UserImage, GroupChat, Messages
 
 
 class MessageSerializer(ModelSerializer):

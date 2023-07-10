@@ -45,8 +45,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third party apps
     'rest_framework',
+    'allauth',
     # Local apps
     'chat.apps.ChatConfig',
+    'api.apps.ApiConfig'
 ]
 
 MIDDLEWARE = [
@@ -60,6 +62,13 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'chatterbox.urls'
+
+LOGIN_URL = '/accounts/login/'
+
+LOGIN_REDIRECT_URL = '/'
+
+LOGOUT_REDIRECT_URL = '/'
+
 
 TEMPLATES = [
     {

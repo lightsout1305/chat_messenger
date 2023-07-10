@@ -21,7 +21,7 @@ class RunServerTests(unittest.TestCase):
         Тест-кейс, проверяющий, что тестовый сервер работает
         """
         self.browser.get('http://127.0.0.1:8000')
-        self.assertIn("Congratulations", self.browser.title)
+        self.assertEqual("ChatterBox", self.browser.title)
 
     def tearDown(self) -> None:
         """
