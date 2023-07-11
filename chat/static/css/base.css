@@ -1,0 +1,32 @@
+.page {
+    background-image: url("../img/background.jpg");
+    background-size: 100% 800%;
+    background-repeat: no-repeat;
+}
+
+.chatterbox-header {
+    width: 50%;
+    height: 100px;
+    border: 2px solid black;
+    background-color: white;
+    border-radius: 8px;
+    margin-left: 25%;
+    padding-bottom: 20px;
+    opacity: 75%;
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.5);
+}
+
+.chatterbox-header h1 {
+    font-family: "Andale Mono", "Magneto", monospace;
+    font-size: 50px;
+    color: black;
+    padding-left: 35%;
+    margin-bottom: 100px;
+
+}
+
+.chatterbox-header h2 {
+    font-family: "Arial Black", sans-serif;
+    color: white;
+    padding-left: 10%;
+}
